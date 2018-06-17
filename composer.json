@@ -1,37 +1,37 @@
 {
-	"name" : "latrell/lock",
-	"description" : "支持Redis与Memcached的并发锁。",
-	"keywords" : [
-		"Lock",
-		"L5",
-		"Laravel 5",
-		"Laravel"
-	],
-	"license" : "MIT",
-	"authors" : [{
-			"name" : "Latrell Chan",
-			"email" : "i@latrell.me"
-		}
-	],
-	"require" : {
-		"php" : ">=5.5.9"
-	},
-	"require-dev" : {
-		"illuminate/support" : "5.*"
-	},
-	"extra" : {
-		"laravel" : {
-			"providers" : [
-				"Latrell\\Lock\\LockServiceProvider"
-			],
-			"aliases" : {
-				"Lock" : "Latrell\\Lock\\Facades\\Lock"
-			}
-		}
-	},
-	"autoload" : {
-		"psr-0" : {
-			"Latrell\\Lock\\" : "src/"
-		}
-	}
+    "name" : "latrell/lock",
+    "description" : "支持Redis与Memcached的并发锁。",
+    "keywords" : [
+        "Lock",
+        "L5",
+        "Laravel 5",
+        "Laravel"
+    ],
+    "license" : "MIT",
+    "authors" : [{
+            "name" : "Latrell Chan",
+            "email" : "i@latrell.me"
+        }
+    ],
+    "require" : {
+        "php" : ">=5.5.9"
+    },
+    "require-dev" : {
+        "illuminate/support" : "5.*"
+    },
+    "extra" : {
+        "laravel" : {
+            "providers" : [
+                "Latrell\\Lock\\LockServiceProvider"
+            ],
+            "aliases" : {
+                "Lock" : "Latrell\\Lock\\Facades\\Lock"
+            }
+        }
+    },
+    "autoload" : {
+        "psr-0" : {
+            "Latrell\\Lock\\" : "src/"
+        }
+    }
 }

@@ -41,19 +41,30 @@ composer require latrell/lock dev-master
 
 ### 闭包方式
 
-使用闭包的方式，可由方法内自动处理异常，并自动解锁，防止死锁。
+使用闭包的方式，自动解锁，防止死锁；上锁失败时抛出 AcquireFailedException 异常
 
-但需注意，外部变量需要使用 `use` 引入才可在闭包中使用。
+需注意，外部变量需要使用 `use` 引入才可在闭包中使用。
 
 ```php
 // 防止商品超卖。
 $key = 'Goods:' . $goods_id;
 Lock::granule($key, function() use($goods_id) {
-	$goods = Goods::find($goods_id);
-	if ( $goods->stock > 0 ) {
-		// ...
-	}
+    $goods = Goods::find($goods_id);
+    if ($goods->stock > 0) {
+        // ...
+    }
 });
+
+// synchronized 是 granule的别名
+try {
+    $key = md5($user_id . ':' . $udid); // 用户ID+设备ID，防止重复下单
+    Lock::synchronized($key, function() use($data) {
+        $orderService->createOrder($data)
+        // ... 
+    }, 0);
+} catch (AcquireFailedException $e) {
+    // 请求过于频繁，请稍后再试
+}
 ```
 
 ### 普通方式
@@ -67,18 +78,19 @@ $key = 'Goods:' . $goods_id;
 
 // **注意：除非特别自信，否则一定要记得捕获异常，保证解锁动作。**
 try {
-
-	// 上锁。
-	Lock::acquire($key);
-
-	// 逻辑单元。
-	$goods = Goods::find($goods_id);
-	if ( $goods->stock > 0 ) {
-		// ...
-	}
+    // 上锁成功（max_timeout 为0时不会等待当前持有锁的任务运行完成）
+    if (Lock::acquire($key, 0)) { 
+        // acquire 为true表示上锁成功，false表示锁被占用或上锁等待超时 
+        // 第二个参数指定上锁最大超时时间（秒），不指定则默认使用配置文件设置
+        // 逻辑单元。
+        $goods = Goods::find($goods_id);
+        if ( $goods->stock > 0 ) {
+            // ...
+        }
+    }
 } finally {
-	// 解锁。
-	Lock::release($key);
+    // 解锁。
+    Lock::release($key);
 }
 ```
 
@@ -89,8 +101,8 @@ try {
 找到 `app/Http/Kernel.php` 中的 `$routeMiddleware` 配置，添加中间件配置。
 
 ```
-	protected $routeMiddleware = [
-		// ...
-		'synchronized' => \Latrell\Lock\Middleware\SynchronizationRequests::class,
-	];
+    protected $routeMiddleware = [
+        // ...
+        'synchronized' => \Latrell\Lock\Middleware\SynchronizationRequests::class,
+    ];
 ```
