@@ -2,6 +2,7 @@
 namespace Latrell\Lock;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Carbon\Carbon;
 use RuntimeException;
 
@@ -88,10 +89,12 @@ class FileStore extends GranuleStore implements LockInterface
 		while (time() - $time < $this->max_timeout) {
 
 			// 删除超时的锁文件。
-			$current_value = $this->files->get($key);
-			if (! is_null($current_value) && $this->hasLockValueExpired($current_value)) {
-				$this->files->delete($file);
-			}
+			try {
+				$current_value = $this->files->get($key);
+				if (! is_null($current_value) && $this->hasLockValueExpired($current_value)) {
+					$this->files->delete($file);
+				}
+			} catch (FileNotFoundException $e) {}
 
 			// 检查锁文件是否存在。。
 			if (! $this->files->exists($file)) {
@@ -135,12 +138,20 @@ class FileStore extends GranuleStore implements LockInterface
 			throw new RuntimeException('Attempting to release a lock that is not held');
 		}
 
-		$value = $this->files->get($key);
-		unset($this->expires_at[$name]); // 释放内存占用。
-		if (! $this->hasLockValueExpired($value)) {
-			$this->files->delete($key); // 释放锁。
-		} else {
-			trigger_error(sprintf('A PredisLock was not released before the timeout. Class: %s Lock Name: %s', get_class($this), $name), E_USER_WARNING);
+		// 取得锁文件路径。
+		$file = $this->directory . '/' . $key;
+
+		try {
+			$value = $this->files->get($file);
+
+			unset($this->expires_at[$name]); // 释放内存占用。
+			if (! $this->hasLockValueExpired($value)) {
+				$this->files->delete($file); // 释放锁。
+			} else {
+				trigger_error(sprintf('A FileLock was not released before the timeout. Class: %s Lock Name: %s', get_class($this), $name), E_USER_WARNING);
+			}
+		} catch (FileNotFoundException $e) {
+			trigger_error(sprintf('Attempting to release a lock that is not held. Class: %s Lock Name: %s', get_class($this), $name), E_USER_WARNING);
 		}
 	}
 

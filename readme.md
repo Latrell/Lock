@@ -17,6 +17,8 @@ composer require latrell/lock dev-master
 
 找到 `config/app.php` 配置文件中的 `providers` 键，注册服务提供者。
 
+（Laravel 5.5 以上版本可跳过该步骤）
+
 ```php
     'providers' => [
         // ...
@@ -78,4 +80,17 @@ try {
 	// 解锁。
 	Lock::release($key);
 }
+```
+
+### 中间件
+
+使用中间件的方式，让两个相同指纹的请求同步执行。
+
+找到 `app/Http/Kernel.php` 中的 `$routeMiddleware` 配置，添加中间件配置。
+
+```
+	protected $routeMiddleware = [
+		// ...
+		'synchronized' => \Latrell\Lock\Middleware\SynchronizationRequests::class,
+	];
 ```
