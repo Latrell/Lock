@@ -8,7 +8,7 @@ class RedisStore extends GranuleStore implements LockInterface
     /**
      * The Redis database connection.
      *
-     * @var \Illuminate\Redis\Database
+     * @var RedisManager
      */
     protected $redis;
 
@@ -135,7 +135,7 @@ class RedisStore extends GranuleStore implements LockInterface
     /**
      * Get the Redis database instance.
      *
-     * @return \Illuminate\Redis\Database
+     * @return RedisManager
      */
     public function getRedis()
     {
